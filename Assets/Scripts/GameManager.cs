@@ -42,15 +42,17 @@ public class ChessBoard
         }
     }
 
-    private void CreateChess(ChessColor chessColor,int x,int y)
+    private void CreateChess(ChessColor chessColor, int x, int y)
     {
         if (chessColor == ChessColor.Black)
         {
-            GameObject.Instantiate(GameManager.Instance.blackChess, new Vector2(x, y), Quaternion.identity);
+            GameObject blackChess = GameObject.Instantiate(GameManager.Instance.blackChess, new Vector2(x, y), Quaternion.identity);
+            Debug.Log("Black chess instantiated.");
         }
         else
         {
-            GameObject.Instantiate(GameManager.Instance.whiteChess, new Vector2(x, y), Quaternion.identity);
+            GameObject whiteChess = GameObject.Instantiate(GameManager.Instance.whiteChess, new Vector2(x, y), Quaternion.identity);
+            Debug.Log("White chess instantiated.");
         }
     }
 
@@ -137,7 +139,6 @@ public class ChessBoard
     public bool CheckWin(int x, int y)
     {
 
-        // ���ˮƽ����
         for (int i = -4; i <= 0; i++)
         {
             bool win = true;
@@ -152,7 +153,6 @@ public class ChessBoard
             if (win) return true;
         }
 
-        // ��鴹ֱ����
         for (int i = -4; i <= 0; i++)
         {
             bool win = true;
@@ -167,7 +167,6 @@ public class ChessBoard
             if (win) return true;
         }
 
-        // ���Խ��߷������ϵ����£�
         for (int i = -4; i <= 0; i++)
         {
             bool win = true;
@@ -182,7 +181,6 @@ public class ChessBoard
             if (win) return true;
         }
 
-        // ���Խ��߷������ϵ����£�
         for (int i = -4; i <= 0; i++)
         {
             bool win = true;
@@ -234,10 +232,8 @@ public class MCTS
 
     public (int,int) FindNextMove(ChessBoard chessBoard,int simulations)
     {
-        //��ǰ����
         root = new Chess(chessBoard);
-
-        //ģ��
+        
         for (int i = 0; i < simulations; i++)
         {
             Chess chess = SelectChess(root);
@@ -246,17 +242,18 @@ public class MCTS
                 Expansion(chess);
                 
             }
-            
             if(chess.child.Any())
             {
                 Chess newChess = chess.child[Random.Range(0,chess.child.Count)];
                 int result = Simulate(newChess);
                 BackPropagation(newChess, result);
             }
+            
         }
         Chess best = root.child.OrderByDescending(c => c.visits).FirstOrDefault();
-        return best.pos;
+        return (best.pos.Item1, best.pos.Item2);
     }
+
 
     private void BackPropagation(Chess chess, int result)
     {
@@ -268,7 +265,6 @@ public class MCTS
         }
     }
 
-    //�Ե�ǰ�������ģ��
     private int Simulate(Chess chess)
     {
         if (true)
@@ -407,7 +403,7 @@ public class GameManager : MonoBehaviour
     public int simulations;
     public bool aiFisrt;
     public ChessColor currentState = ChessColor.Black;
-    private bool flag = false;
+
     // Update is called once per frame
     void Update()
     {
@@ -418,20 +414,18 @@ public class GameManager : MonoBehaviour
             int y = Mathf.RoundToInt(worldPosition.y);
             if (Mathf.Abs(x) > 5 || Mathf.Abs(y) > 5 || curChessBoard.chessDic.ContainsKey((x, y)))
             {
-                Debug.Log("�����λ��,������");
+                Debug.Log("当前位置不可下");
                 return;
             }
-            //�ƶ�
             curChessBoard.MoveTo(x, y);
-            flag = true;
-            
-        }
-        if (flag && true)
-        {
-            (int, int) pos = mCTS.FindNextMove(curChessBoard, simulations);
-            curChessBoard.MoveTo(pos.Item1, pos.Item2);
-            flag = false;
+            StartCoroutine(NewMethod());
         }
     }
 
+    private IEnumerator NewMethod()
+    {
+        yield return null;
+        var pos = mCTS.FindNextMove(curChessBoard, simulations);
+        curChessBoard.MoveTo(pos.Item1,pos.Item2);
+    }
 }
